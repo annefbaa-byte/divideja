@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#000000">
-<title>DivideAê</title>
+<title>Splitae</title>
 <style>
 :root{
   --bg:#000000;
@@ -441,7 +441,7 @@ html.theme-light .exp-tag.paid{ color:#0a6b1e; }
     </div>
     <div class="brand-header">
       <div style="font-size:36px;">💸</div>
-      <h1>DivideAê</h1>
+      <h1>Splitae</h1>
       <div class="sub">DIVIDA CONTAS EM GRUPO</div>
     </div>
     <div class="content with-nav" id="groups-list"></div>
@@ -1523,7 +1523,7 @@ function exportData(){
   const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'divideiae-backup.json';
+  a.href = url; a.download = 'splitae-backup.json';
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
