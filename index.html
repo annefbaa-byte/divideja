@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>Divide Já</title>
+<style>
+:root{
+  --bg:#000000;
+  --card:#1c1c1e;
+  --card2:#2c2c2e;
+  --border:#3a3a3c;
+  --text:#ffffff;
+  --text-dim:#8e8e93;
+  --blue:#0a84ff;
+  --green:#32d74b;
+  --red:#ff453a;
+  --orange:#ff9f0a;
+  safe-top: env(safe-area-inset-top);
+  safe-bottom: env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+html,body{
+  margin:0; padding:0; height:100%;
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  overscroll-behavior-y: none;
+}
+#app{
+  max-width:520px; margin:0 auto; min-height:100vh;
+  display:flex; flex-direction:column;
+  padding-top:calc(var(--safe-top) + 8px);
+  padding-bottom:calc(var(--safe-bottom));
+  position:relative;
+}
+.screen{ display:none; flex-direction:column; flex:1; min-height:0; }
+.screen.active{ display:flex; }
+
+/* ---- top bar ---- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 16px; min-height:36px;
+}
+.topbar .side{ display:flex; align-items:center; gap:14px; min-width:40px; }
+.topbar .side.right{ justify-content:flex-end; }
+.icon-btn{
+  background:none; border:none; color:var(--blue); font-size:17px;
+  padding:6px; cursor:pointer; display:flex; align-items:center; gap:4px;
+}
+.icon-btn:active{ opacity:0.5; }
+.topbar-title{ font-size:17px; font-weight:600; color:var(--text-dim); }
+
+/* ---- header list screen ---- */
+.brand-header{ text-align:center; padding:6px 16px 18px; }
+.brand-header h1{ font-size:30px; margin:6px 0 0; font-weight:800; letter-spacing:-0.5px; }
+.brand-header .sub{ color:var(--text-dim); font-size:13px; font-weight:600; letter-spacing:1px; }
+
+.content{ flex:1; overflow-y:auto; padding:0 16px 100px; -webkit-overflow-scrolling:touch; }
+
+/* ---- group icon ---- */
+.group-icon{
+  width:56px; height:56px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; flex-shrink:0;
+  background:linear-gradient(160deg,#ff9f0a,#ff453a);
+}
+.group-icon.small{ width:44px; height:44px; font-size:22px; border-radius:11px; }
+.group-icon-big{
+  width:64px; height:64px; border-radius:16px; margin:4px auto 8px;
+  display:flex; align-items:center; justify-content:center; font-size:32px;
+  background:linear-gradient(160deg,#ff9f0a,#ff453a);
+}
+
+/* ---- group list card ---- */
+.group-card{
+  display:flex; align-items:center; gap:14px;
+  background:var(--card); border-radius:14px; padding:12px 14px; margin:8px 0;
+  cursor:pointer;
+}
+.group-card:active{ background:var(--card2); }
+.group-card .info{ flex:1; min-width:0; }
+.group-card .info .name{ font-size:17px; font-weight:600; }
+.group-card .info .desc{ font-size:13px; color:var(--text-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.group-card .chev{ color:var(--text-dim); font-size:20px; }
+
+.empty-state{ text-align:center; color:var(--text-dim); margin-top:60px; padding:0 30px; line-height:1.5; }
+.empty-state .emoji{ font-size:44px; display:block; margin-bottom:10px; }
+
+/* ---- FAB ---- */
+.fab-wrap{
+  position:absolute; left:0; right:0; bottom:0;
+  display:flex; flex-direction:column; align-items:center;
+  padding-bottom:calc(var(--safe-bottom) + 14px); pointer-events:none;
+}
+.fab{
+  pointer-events:auto;
+  width:56px; height:56px; border-radius:50%;
+  background:var(--blue); color:#fff; border:none;
+  font-size:28px; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 14px rgba(10,132,255,.5); cursor:pointer;
+}
+.fab:active{ transform:scale(0.94); }
+.fab-label{ pointer-events:auto; color:var(--blue); font-size:12px; font-weight:600; margin-top:4px; }
+
+/* ---- group header + tabs ---- */
+.group-title-block{ text-align:center; padding:2px 16px 10px; }
+.group-title-block h2{ margin:2px 0 0; font-size:20px; font-weight:700; }
+.tabs{ display:flex; background:var(--card); border-radius:9px; margin:0 16px 14px; padding:2px; }
+.tab{
+  flex:1; text-align:center; padding:7px 4px; border-radius:7px; font-size:13px; font-weight:600;
+  color:var(--text-dim); cursor:pointer; user-select:none;
+}
+.tab.active{ background:var(--card2); color:var(--text); }
+
+.summary-row{ display:flex; padding:2px 16px 12px; gap:16px; }
+.summary-item{ flex:1; }
+.summary-item .label{ font-size:12px; color:var(--text-dim); }
+.summary-item .value{ font-size:20px; font-weight:700; margin-top:2px; }
+
+.date-heading{ font-size:13px; color:var(--text-dim); font-weight:600; margin:14px 0 6px 2px; }
+
+.expense-row{
+  display:flex; align-items:center; gap:12px;
+  background:var(--card); border-radius:12px; padding:10px 12px; margin-bottom:8px;
+  cursor:pointer;
+}
+.expense-row:active{ background:var(--card2); }
+.expense-row .cat{
+  width:40px; height:40px; border-radius:10px; background:var(--card2);
+  display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+}
+.expense-row .info{ flex:1; min-width:0; }
+.expense-row .info .t{ font-size:15px; font-weight:600; }
+.expense-row .info .p{ font-size:12px; color:var(--text-dim); margin-top:1px; }
+.expense-row .amt{ font-size:15px; font-weight:600; white-space:nowrap; }
+.expense-row.settlement .cat{ background:rgba(50,215,75,.15); }
+
+/* ---- balances ---- */
+.balance-hero{
+  background:var(--card); border-radius:14px; padding:14px; margin:0 0 12px;
+  display:flex; gap:12px; align-items:flex-start; cursor:pointer;
+}
+.balance-hero .emoji{ font-size:30px; }
+.balance-hero .txt b{ font-size:16px; display:block; margin-bottom:2px; }
+.balance-hero .txt span{ font-size:13px; color:var(--text-dim); line-height:1.4; }
+.link-btn{
+  display:block; text-align:left; background:var(--card); border:none; color:var(--blue);
+  font-size:15px; font-weight:600; border-radius:14px; padding:14px; width:100%; margin-bottom:16px; cursor:pointer;
+}
+.section-label{ font-size:13px; color:var(--text-dim); font-weight:600; margin:4px 0 6px 2px; text-transform:uppercase; letter-spacing:.3px; }
+.balance-person{
+  display:flex; align-items:center; gap:12px;
+  background:var(--card); border-radius:12px; padding:11px 14px; margin-bottom:8px;
+}
+.avatar{
+  width:36px; height:36px; border-radius:50%; background:var(--card2);
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;
+  color:#fff;
+}
+.balance-person .name{ flex:1; font-size:15px; font-weight:600; }
+.balance-person .amt{ font-size:15px; font-weight:700; }
+.amt.pos{ color:var(--green); }
+.amt.neg{ color:var(--red); }
+
+/* ---- forms ---- */
+.form-group{ margin-bottom:18px; }
+.form-label{ font-size:13px; color:var(--text-dim); font-weight:600; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:.3px; }
+input[type=text], input[type=number], input[type=date], select{
+  width:100%; background:var(--card); border:1px solid var(--border); color:var(--text);
+  font-size:16px; padding:12px 14px; border-radius:10px; outline:none;
+}
+input:focus, select:focus{ border-color:var(--blue); }
+.big-amount-input{
+  width:100%; background:none; border:none; color:var(--text); text-align:center;
+  font-size:44px; font-weight:700; outline:none; padding:10px 0;
+}
+.chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.chip{
+  padding:9px 14px; border-radius:20px; background:var(--card); border:1px solid var(--border);
+  font-size:14px; font-weight:600; cursor:pointer; color:var(--text-dim); display:flex; align-items:center; gap:6px;
+}
+.chip.selected{ background:var(--blue); color:#fff; border-color:var(--blue); }
+.chip .x{ margin-left:2px; opacity:.8; }
+.emoji-grid{ display:flex; flex-wrap:wrap; gap:10px; }
+.emoji-opt{
+  width:44px; height:44px; border-radius:12px; background:var(--card); border:2px solid transparent;
+  font-size:22px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.emoji-opt.selected{ border-color:var(--blue); background:var(--card2); }
+.split-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.split-row .avatar{ width:32px; height:32px; font-size:12px; }
+.split-row .nm{ flex:1; font-size:15px; }
+.split-row input{ width:100px; text-align:right; padding:8px 10px; font-size:15px; }
+.row-inline{ display:flex; gap:10px; }
+.row-inline input{ flex:1; }
+.add-row-btn{
+  display:flex; align-items:center; gap:8px; color:var(--blue); font-weight:600; font-size:15px;
+  background:none; border:none; padding:10px 0; cursor:pointer;
+}
+.participant-line{
+  display:flex; align-items:center; gap:10px; background:var(--card); border-radius:12px; padding:10px 12px; margin-bottom:8px;
+}
+.participant-line .nm{ flex:1; font-size:15px; font-weight:600; }
+.remove-x{ color:var(--red); font-size:18px; background:none; border:none; cursor:pointer; padding:4px; }
+
+.primary-btn{
+  width:100%; background:var(--blue); color:#fff; border:none; border-radius:12px;
+  padding:15px; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px;
+}
+.primary-btn:active{ opacity:.8; }
+.primary-btn:disabled{ opacity:.35; }
+.danger-btn{
+  width:100%; background:none; color:var(--red); border:1px solid var(--red); border-radius:12px;
+  padding:14px; font-size:16px; font-weight:600; cursor:pointer; margin-top:10px;
+}
+.hint{ font-size:12px; color:var(--text-dim); margin-top:6px; }
+.segmented{ display:flex; background:var(--card); border-radius:10px; padding:2px; margin-bottom:16px; }
+.segmented .seg{ flex:1; text-align:center; padding:9px; border-radius:8px; font-size:14px; font-weight:600; color:var(--text-dim); cursor:pointer; }
+.segmented .seg.active{ background:var(--card2); color:var(--text); }
+
+.sheet-overlay{
+  position:fixed; inset:0; background:#000; z-index:50; display:none; flex-direction:column;
+  max-width:520px; margin:0 auto;
+}
+.sheet-overlay.active{ display:flex; }
+
+.menu-popover{
+  position:absolute; top:44px; right:16px; background:var(--card2); border-radius:12px;
+  overflow:hidden; z-index:40; box-shadow:0 6px 20px rgba(0,0,0,.5); display:none; min-width:200px;
+}
+.menu-popover.active{ display:block; }
+.menu-item{ padding:13px 16px; font-size:15px; cursor:pointer; border-bottom:1px solid var(--border); }
+.menu-item:last-child{ border-bottom:none; }
+.menu-item:active{ background:var(--border); }
+.menu-item.danger{ color:var(--red); }
+
+.toast{
+  position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+  background:var(--card2); color:#fff; padding:12px 20px; border-radius:10px; font-size:14px;
+  z-index:100; opacity:0; transition:opacity .25s; pointer-events:none; max-width:80%; text-align:center;
+}
+.toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== LISTA DE GRUPOS ===================== -->
+  <section class="screen active" id="screen-home">
+    <div class="topbar">
+      <div class="side"></div>
+      <div class="side right"><button class="icon-btn" onclick="openHomeMenu()">⚙️</button></div>
+    </div>
+    <div class="brand-header">
+      <div style="font-size:36px;">💸</div>
+      <h1>Divide Já</h1>
+      <div class="sub">DIVIDA CONTAS EM GRUPO</div>
+    </div>
+    <div class="content" id="groups-list"></div>
+    <div class="fab-wrap">
+      <button class="fab" onclick="openNewGroup()">＋</button>
+      <div class="fab-label">Novo grupo</div>
+    </div>
+  </section>
+
+  <!-- ===================== GRUPO (detalhe) ===================== -->
+  <section class="screen" id="screen-group">
+    <div class="topbar">
+      <div class="side"><button class="icon-btn" onclick="goHome()">‹ Grupos</button></div>
+      <div class="side right"><button class="icon-btn" onclick="toggleGroupMenu(event)">•••</button></div>
+    </div>
+    <div class="group-title-block">
+      <div class="group-icon-big" id="group-detail-icon"></div>
+      <h2 id="group-detail-name"></h2>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="expenses" onclick="switchTab('expenses')">Despesas</div>
+      <div class="tab" data-tab="balances" onclick="switchTab('balances')">Saldos</div>
+      <div class="tab" data-tab="photos" onclick="switchTab('photos')">Fotos</div>
+    </div>
+
+    <div class="content" id="tab-expenses">
+      <div class="summary-row">
+        <div class="summary-item"><div class="label">Meus gastos</div><div class="value" id="my-expenses-value">R$ 0,00</div></div>
+        <div class="summary-item"><div class="label">Total despesas</div><div class="value" id="total-expenses-value">R$ 0,00</div></div>
+      </div>
+      <div id="expenses-list"></div>
+    </div>
+
+    <div class="content" id="tab-balances" style="display:none;">
+      <div id="balances-hero-wrap"></div>
+      <button class="link-btn" onclick="openReimbursements()">Ver todos os reembolsos sugeridos</button>
+      <div class="section-label">Saldos</div>
+      <div id="balances-list"></div>
+    </div>
+
+    <div class="content" id="tab-photos" style="display:none;">
+      <div id="photos-list"></div>
+    </div>
+
+    <div class="fab-wrap" id="group-fab">
+      <button class="fab" onclick="openNewExpense()">＋</button>
+      <div class="fab-label">Adicionar despesa</div>
+    </div>
+  </section>
+
+  <div class="menu-popover" id="group-menu">
+    <div class="menu-item" onclick="editParticipants()">👥 Editar participantes</div>
+    <div class="menu-item" onclick="editGroupInfo()">✏️ Editar grupo</div>
+    <div class="menu-item danger" onclick="deleteGroup()">🗑️ Excluir grupo</div>
+  </div>
+  <div class="menu-popover" id="home-menu">
+    <div class="menu-item" onclick="exportData()">⬇️ Exportar dados</div>
+    <div class="menu-item danger" onclick="wipeAllData()">🗑️ Apagar todos os dados</div>
+  </div>
+
+  <!-- ===================== SHEET: NOVO GRUPO ===================== -->
+  <section class="sheet-overlay" id="sheet-new-group">
+    <div class="topbar">
+      <div class="side"><button class="icon-btn" onclick="closeSheet('sheet-new-group')">Cancelar</button></div>
+      <div class="topbar-title">Novo grupo</div>
+      <div class="side right"><button class="icon-btn" onclick="saveNewGroup()"><b>Criar</b></button></div>
+    </div>
+    <div class="content">
+      <div class="form-group">
+        <label class="form-label">Ícone</label>
+        <div class="emoji-grid" id="new-group-emojis"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nome do grupo</label>
+        <input type="text" id="new-group-name" placeholder="Ex: Viagem para a praia">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Participantes</label>
+        <div id="new-group-participants"></div>
+        <div class="row-inline" style="margin-top:6px;">
+          <input type="text" id="new-participant-input" placeholder="Nome do participante">
+          <button class="icon-btn" style="font-size:24px;" onclick="addNewGroupParticipant()">＋</button>
+        </div>
+        <div class="hint">Adicione todas as pessoas que vão dividir as despesas.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SHEET: EDITAR GRUPO ===================== -->
+  <section class="sheet-overlay" id="sheet-edit-group">
+    <div class="topbar">
+      <div class="side"><button class="icon-btn" onclick="closeSheet('sheet-edit-group')">Cancelar</button></div>
+      <div class="topbar-title">Editar grupo</div>
+      <div class="side right"><button class="icon-btn" onclick="saveEditGroup()"><b>Salvar</b></button></div>
+    </div>
+    <div class="content">
+      <div class="form-group">
+        <label class="form-label">Ícone</label>
+        <div class="emoji-grid" id="edit-group-emojis"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nome do grupo</label>
+        <input type="text" id="edit-group-name">
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SHEET: EDITAR PARTICIPANTES ===================== -->
+  <section class="sheet-overlay" id="sheet-participants">
+    <div class="topbar">
+      <div class="side"><button class="icon-btn" onclick="closeSheet('sheet-participants')">Fechar</button></div>
+      <div class="topbar-title">Participantes</div>
+      <div class="side right"></div>
+    </div>
+    <div class="content">
+      <div id="participants-edit-list"></div>
+      <div class="row-inline" style="margin-top:10px;">
+        <input type="text" id="edit-participant-input" placeholder="Nome do participante">
+        <button class="icon-btn" style="font-size:24px;" onclick="addParticipantToGroup()">＋</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SHEET: NOVA DESPESA ===================== -->
+  <section class="sheet-overlay" id="sheet-new-expense">
+    <div class="topbar">
+      <div class="side"><button class="icon-btn" onclick="closeSheet('sheet-new-expense')">Cancelar</button></div>
+      <div class="topbar-title" id="expense-sheet-title">Nova despesa</div>
+      <div class="side right"><button class="icon-btn" onclick="saveNewExpense()"><b>Salvar</b></button></div>
+    </div>
+    <div class="content">
+      <input type="number" inputmode="decimal" class="big-amount-input" id="expense-amount" placeholder="R$ 0,00">
+
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <input type="text" id="expense-title" placeholder="Ex: Jantar, Hotel, Gasolina...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <div class="chips" id="expense-category-chips"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Pago por</label>
+        <div class="chips" id="expense-payer-chips"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input type="date" id="expense-date">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Dividir entre</label>
+        <div class="chips" id="expense-participants-chips"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tipo de divisão</label>
+        <div class="segmented">
+          <div class="seg active" data-split="equal" onclick="setSplitType('equal')">Igualmente</div>
+          <div class="seg" data-split="custom" onclick="setSplitType('custom')">Valores personalizados</div>
+        </div>
+        <div id="expense-custom-split" style="display:none;"></div>
+        <div class="hint" id="split-hint"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Foto (opcional)</label>
+        <input type="file" accept="image/*" capture="environment" id="expense-photo-input" onchange="onExpensePhoto(event)">
+        <div id="expense-photo-preview" style="margin-top:8px;"></div>
+      </div>
+
+      <button class="danger-btn" id="delete-expense-btn" style="display:none;" onclick="deleteCurrentExpense()">Excluir despesa</button>
+    </div>
+  </section>
+
+  <!-- ===================== SHEET: REEMBOLSOS ===================== -->
+  <section class="sheet-overlay" id="sheet-reimbursements">
+    <div class="topbar">
+      <div class="side"><button class="icon-btn" onclick="closeSheet('sheet-reimbursements')">Fechar</button></div>
+      <div class="topbar-title">Reembolsos sugeridos</div>
+      <div class="side right"></div>
+    </div>
+    <div class="content" id="reimbursements-list"></div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================== ESTADO E PERSISTÊNCIA ==================== */
+const STORAGE_KEY = 'dividejaData';
+let state = { groups: [] };
+let currentGroupId = null;
+let currentTab = 'expenses';
+let currentSplitType = 'equal';
+let editingExpenseId = null;
+let pendingPhotoDataUrl = null;
+let newGroupParticipants = [];
+let newGroupEmoji = '🏖️';
+let editGroupEmojiPick = '🏖️';
+
+const EMOJIS = ['🏖️','🏙️','🍽️','🏠','🎉','✈️','🚗','⛺','🎓','💼','🎁','⚽'];
+const CATEGORIES = [
+  {id:'geral', label:'Geral', icon:'🧾'},
+  {id:'comida', label:'Comida', icon:'🍽️'},
+  {id:'hospedagem', label:'Hospedagem', icon:'🏨'},
+  {id:'transporte', label:'Transporte', icon:'🚗'},
+  {id:'lazer', label:'Lazer', icon:'🎉'},
+  {id:'compras', label:'Compras', icon:'🛍️'},
+  {id:'outros', label:'Outros', icon:'📦'},
+];
+let currentExpenseCategory = 'geral';
+let currentExpensePayer = null;
+let currentExpenseParticipants = [];
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = JSON.parse(raw);
+  }catch(e){ console.error('Erro ao carregar dados', e); }
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function uid(){ return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+function fmtMoney(v){
+  return (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+}
+function fmtDate(d){
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
+}
+function todayISO(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function initials(name){
+  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+function colorForId(id){
+  const colors = ['#ff9f0a','#0a84ff','#32d74b','#ff453a','#bf5af2','#64d2ff','#ffd60a','#ac8e68'];
+  let h=0; for(const c of id) h = (h*31 + c.charCodeAt(0)) >>> 0;
+  return colors[h % colors.length];
+}
+
+function getGroup(id){ return state.groups.find(g=>g.id===id); }
+
+/* ==================== NAVEGAÇÃO ==================== */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  closeAllMenus();
+}
+function goHome(){
+  currentGroupId = null;
+  renderGroupsList();
+  showScreen('screen-home');
+}
+function openGroup(id){
+  currentGroupId = id;
+  currentTab = 'expenses';
+  renderGroupDetail();
+  showScreen('screen-group');
+}
+function closeAllMenus(){
+  document.getElementById('group-menu').classList.remove('active');
+  document.getElementById('home-menu').classList.remove('active');
+}
+function toggleGroupMenu(e){
+  e.stopPropagation();
+  document.getElementById('group-menu').classList.toggle('active');
+}
+function openHomeMenu(){
+  document.getElementById('home-menu').classList.toggle('active');
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.menu-popover') && !e.target.closest('.icon-btn')) closeAllMenus();
+});
+
+function openSheet(id){ document.getElementById(id).classList.add('active'); }
+function closeSheet(id){ document.getElementById(id).classList.remove('active'); }
+
+/* ==================== TELA: LISTA DE GRUPOS ==================== */
+function renderGroupsList(){
+  const wrap = document.getElementById('groups-list');
+  if(state.groups.length === 0){
+    wrap.innerHTML = `<div class="empty-state"><span class="emoji">💸</span>Você ainda não tem nenhum grupo.<br>Toque em "Novo grupo" para começar a dividir despesas.</div>`;
+    return;
+  }
+  wrap.innerHTML = state.groups.map(g=>{
+    const totals = calcGroupTotals(g);
+    return `<div class="group-card" onclick="openGroup('${g.id}')">
+      <div class="group-icon">${g.emoji}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(g.name)}</div>
+        <div class="desc">${g.participants.length} participante${g.participants.length!==1?'s':''} · Total ${fmtMoney(totals.total)}</div>
+      </div>
+      <div class="chev">›</div>
+    </div>`;
+  }).join('');
+}
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML;
+}
+
+/* ==================== NOVO GRUPO ==================== */
+function openNewGroup(){
+  newGroupParticipants = [];
+  newGroupEmoji = EMOJIS[0];
+  document.getElementById('new-group-name').value = '';
+  document.getElementById('new-participant-input').value = '';
+  renderEmojiGrid('new-group-emojis', newGroupEmoji, (em)=>{ newGroupEmoji = em; renderEmojiGrid('new-group-emojis', newGroupEmoji, arguments.callee._cb); });
+  setupEmojiPicker('new-group-emojis', ()=>newGroupEmoji, (em)=>newGroupEmoji=em);
+  renderNewGroupParticipants();
+  openSheet('sheet-new-group');
+}
+function setupEmojiPicker(containerId, getVal, setVal){
+  renderEmojiGrid(containerId, getVal(), (em)=>{ setVal(em); renderEmojiGrid(containerId, em, arguments.callee.__pick); });
+}
+function renderEmojiGrid(containerId, selected, onPick){
+  const el = document.getElementById(containerId);
+  el.innerHTML = EMOJIS.map(em=>`<div class="emoji-opt ${em===selected?'selected':''}" data-em="${em}">${em}</div>`).join('');
+  el.querySelectorAll('.emoji-opt').forEach(node=>{
+    node.onclick = ()=>{ onPick(node.dataset.em); };
+  });
+}
+function addNewGroupParticipant(){
+  const input = document.getElementById('new-participant-input');
+  const name = input.value.trim();
+  if(!name) return;
+  newGroupParticipants.push({id: uid(), name});
+  input.value='';
+  renderNewGroupParticipants();
+}
+function renderNewGroupParticipants(){
+  const wrap = document.getElementById('new-group-participants');
+  wrap.innerHTML = newGroupParticipants.map((p,i)=>`
+    <div class="participant-line">
+      <div class="avatar" style="background:${colorForId(p.id)}">${initials(p.name)}</div>
+      <div class="nm">${escapeHtml(p.name)}</div>
+      <button class="remove-x" onclick="removeNewGroupParticipant(${i})">✕</button>
+    </div>`).join('');
+}
+function removeNewGroupParticipant(i){
+  newGroupParticipants.splice(i,1);
+  renderNewGroupParticipants();
+}
+function saveNewGroup(){
+  const name = document.getElementById('new-group-name').value.trim();
+  if(!name){ showToast('Digite um nome para o grupo'); return; }
+  if(newGroupParticipants.length < 1){ showToast('Adicione pelo menos 1 participante'); return; }
+  const group = {
+    id: uid(),
+    name,
+    emoji: newGroupEmoji,
+    participants: newGroupParticipants.slice(),
+    expenses: []
+  };
+  state.groups.push(group);
+  saveState();
+  closeSheet('sheet-new-group');
+  renderGroupsList();
+  openGroup(group.id);
+}
+
+/* ==================== EDITAR GRUPO ==================== */
+function editGroupInfo(){
+  const g = getGroup(currentGroupId);
+  editGroupEmojiPick = g.emoji;
+  document.getElementById('edit-group-name').value = g.name;
+  renderEmojiGrid('edit-group-emojis', editGroupEmojiPick, (em)=>{ editGroupEmojiPick = em; renderEmojiGrid('edit-group-emojis', em, arguments.callee.__pick); });
+  document.getElementById('group-menu').classList.remove('active');
+  openSheet('sheet-edit-group');
+}
+function saveEditGroup(){
+  const g = getGroup(currentGroupId);
+  const name = document.getElementById('edit-group-name').value.trim();
+  if(!name){ showToast('Digite um nome para o grupo'); return; }
+  g.name = name;
+  g.emoji = editGroupEmojiPick;
+  saveState();
+  closeSheet('sheet-edit-group');
+  renderGroupDetail();
+}
+function deleteGroup(){
+  document.getElementById('group-menu').classList.remove('active');
+  if(!confirm('Tem certeza que deseja excluir este grupo? Essa ação não pode ser desfeita.')) return;
+  state.groups = state.groups.filter(g=>g.id!==currentGroupId);
+  saveState();
+  goHome();
+  showToast('Grupo excluído');
+}
+
+/* ==================== PARTICIPANTES ==================== */
+function editParticipants(){
+  document.getElementById('group-menu').classList.remove('active');
+  document.getElementById('edit-participant-input').value='';
+  renderParticipantsEditList();
+  openSheet('sheet-participants');
+}
+function renderParticipantsEditList(){
+  const g = getGroup(currentGroupId);
+  const wrap = document.getElementById('participants-edit-list');
+  wrap.innerHTML = g.participants.map(p=>`
+    <div class="participant-line">
+      <div class="avatar" style="background:${colorForId(p.id)}">${initials(p.name)}</div>
+      <div class="nm">${escapeHtml(p.name)}</div>
+      <button class="remove-x" onclick="removeGroupParticipant('${p.id}')">✕</button>
+    </div>`).join('');
+}
+function addParticipantToGroup(){
+  const g = getGroup(currentGroupId);
+  const input = document.getElementById('edit-participant-input');
+  const name = input.value.trim();
+  if(!name) return;
+  g.participants.push({id: uid(), name});
+  input.value='';
+  saveState();
+  renderParticipantsEditList();
+  renderGroupDetail();
+}
+function removeGroupParticipant(pid){
+  const g = getGroup(currentGroupId);
+  const usedInExpense = g.expenses.some(e=> e.paidBy===pid || e.participants.includes(pid));
+  if(usedInExpense){
+    if(!confirm('Esta pessoa participa de despesas existentes. Remover mesmo assim pode afetar os cálculos. Continuar?')) return;
+  }
+  g.participants = g.participants.filter(p=>p.id!==pid);
+  saveState();
+  renderParticipantsEditList();
+  renderGroupDetail();
+}
+
+/* ==================== DETALHE DO GRUPO / TABS ==================== */
+function renderGroupDetail(){
+  const g = getGroup(currentGroupId);
+  if(!g) return goHome();
+  document.getElementById('group-detail-icon').textContent = g.emoji;
+  document.getElementById('group-detail-name').textContent = g.name;
+  document.querySelectorAll('#screen-group .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab === (currentTab==='balances'?'balances':currentTab==='photos'?'photos':'expenses')));
+  renderExpensesTab(g);
+  renderBalancesTab(g);
+  renderPhotosTab(g);
+  showTabContent();
+}
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('#screen-group .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  showTabContent();
+}
+function showTabContent(){
+  document.getElementById('tab-expenses').style.display = currentTab==='expenses' ? '' : 'none';
+  document.getElementById('tab-balances').style.display = currentTab==='balances' ? '' : 'none';
+  document.getElementById('tab-photos').style.display = currentTab==='photos' ? '' : 'none';
+  document.getElementById('group-fab').style.display = currentTab==='expenses' ? 'flex' : 'none';
+}
+
+function calcGroupTotals(g){
+  let total = 0;
+  for(const e of g.expenses){ if(e.category!=='settlement') total += e.amount; }
+  return {total};
+}
+
+function renderExpensesTab(g){
+  const totals = calcGroupTotals(g);
+  document.getElementById('total-expenses-value').textContent = fmtMoney(totals.total);
+  // "Meus gastos" = despesas pagas pela primeira pessoa do grupo (proxy de "eu"), já que não há login.
+  const me = g.participants[0];
+  const myTotal = me ? g.expenses.filter(e=>e.paidBy===me.id && e.category!=='settlement').reduce((s,e)=>s+e.amount,0) : 0;
+  document.getElementById('my-expenses-value').textContent = fmtMoney(myTotal);
+
+  const list = document.getElementById('expenses-list');
+  if(g.expenses.length===0){
+    list.innerHTML = `<div class="empty-state"><span class="emoji">🧾</span>Nenhuma despesa registrada ainda.<br>Toque em "Adicionar despesa" para começar.</div>`;
+    return;
+  }
+  const sorted = g.expenses.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.createdAt-a.createdAt);
+  const byDate = {};
+  for(const e of sorted){ (byDate[e.date] = byDate[e.date]||[]).push(e); }
+  let html = '';
+  for(const date of Object.keys(byDate).sort().reverse()){
+    html += `<div class="date-heading">${fmtDate(date)}</div>`;
+    for(const e of byDate[date]){
+      const payer = g.participants.find(p=>p.id===e.paidBy);
+      const cat = CATEGORIES.find(c=>c.id===e.category) || CATEGORIES[0];
+      const isSettlement = e.category === 'settlement';
+      html += `<div class="expense-row ${isSettlement?'settlement':''}" onclick="openEditExpense('${e.id}')">
+        <div class="cat">${isSettlement?'✅':cat.icon}</div>
+        <div class="info">
+          <div class="t">${escapeHtml(e.title)}</div>
+          <div class="p">${isSettlement?'Reembolso':'Pago por'} ${payer?escapeHtml(payer.name):'?'}</div>
+        </div>
+        <div class="amt">${fmtMoney(e.amount)}</div>
+      </div>`;
+    }
+  }
+  list.innerHTML = html;
+}
+
+/* ==================== CÁLCULO DE SALDOS ==================== */
+function calcBalances(g){
+  const net = {};
+  for(const p of g.participants) net[p.id] = 0;
+  for(const e of g.expenses){
+    const share = e.customSplit ? null : e.amount / e.participants.length;
+    if(net[e.paidBy] === undefined) continue;
+    net[e.paidBy] += e.amount;
+    for(const pid of e.participants){
+      if(net[pid] === undefined) continue;
+      const owed = e.customSplit ? (e.customSplit[pid]||0) : share;
+      net[pid] -= owed;
+    }
+  }
+  return net;
+}
+function simplifyDebts(net, participants){
+  const creditors = [];
+  const debtors = [];
+  for(const p of participants){
+    const v = Math.round((net[p.id]||0)*100)/100;
+    if(v > 0.004) creditors.push({id:p.id, name:p.name, amount:v});
+    else if(v < -0.004) debtors.push({id:p.id, name:p.name, amount:-v});
+  }
+  creditors.sort((a,b)=>b.amount-a.amount);
+  debtors.sort((a,b)=>b.amount-a.amount);
+  const txs = [];
+  let i=0, j=0;
+  while(i<debtors.length && j<creditors.length){
+    const pay = Math.min(debtors[i].amount, creditors[j].amount);
+    txs.push({from:debtors[i].id, fromName:debtors[i].name, to:creditors[j].id, toName:creditors[j].name, amount: Math.round(pay*100)/100});
+    debtors[i].amount -= pay;
+    creditors[j].amount -= pay;
+    if(debtors[i].amount < 0.005) i++;
+    if(creditors[j].amount < 0.005) j++;
+  }
+  return txs;
+}
+
+function renderBalancesTab(g){
+  const net = calcBalances(g);
+  const me = g.participants[0];
+  const heroWrap = document.getElementById('balances-hero-wrap');
+  if(me){
+    const myNet = net[me.id] || 0;
+    let text, emoji;
+    if(myNet > 0.004){ emoji='🤑'; text = `Você é credor de ${fmtMoney(myNet)}`; }
+    else if(myNet < -0.004){ emoji='😬'; text = `Você deve ${fmtMoney(-myNet)}`; }
+    else { emoji='😌'; text = 'Suas contas estão quites'; }
+    heroWrap.innerHTML = `<div class="balance-hero" onclick="openReimbursements()">
+      <div class="emoji">${emoji}</div>
+      <div class="txt"><b>${text}</b><span>Toque para ver os reembolsos sugeridos entre todos os participantes.</span></div>
+    </div>`;
+  } else {
+    heroWrap.innerHTML = '';
+  }
+  const listEl = document.getElementById('balances-list');
+  if(g.participants.length===0){
+    listEl.innerHTML = `<div class="empty-state">Nenhum participante neste grupo.</div>`;
+    return;
+  }
+  listEl.innerHTML = g.participants.map(p=>{
+    const v = net[p.id]||0;
+    const cls = v>0.004 ? 'pos' : v<-0.004 ? 'neg':'';
+    const sign = v>0.004 ? '+ ' : v<-0.004 ? '- ' : '';
+    return `<div class="balance-person">
+      <div class="avatar" style="background:${colorForId(p.id)}">${initials(p.name)}</div>
+      <div class="name">${escapeHtml(p.name)}</div>
+      <div class="amt ${cls}">${sign}${fmtMoney(Math.abs(v))}</div>
+    </div>`;
+  }).join('');
+}
+
+function openReimbursements(){
+  const g = getGroup(currentGroupId);
+  const net = calcBalances(g);
+  const txs = simplifyDebts(net, g.participants);
+  const list = document.getElementById('reimbursements-list');
+  if(txs.length===0){
+    list.innerHTML = `<div class="empty-state"><span class="emoji">🎉</span>Tudo certo! Ninguém deve nada a ninguém.</div>`;
+  } else {
+    list.innerHTML = `<div class="section-label">Sugestões para quitar as contas</div>` + txs.map(tx=>`
+      <div class="balance-person">
+        <div class="avatar" style="background:${colorForId(tx.from)}">${initials(tx.fromName)}</div>
+        <div class="name">${escapeHtml(tx.fromName)} → ${escapeHtml(tx.toName)}</div>
+        <div class="amt">${fmtMoney(tx.amount)}</div>
+      </div>
+      <button class="link-btn" style="margin-bottom:16px;" onclick="settleDebt('${tx.from}','${tx.to}',${tx.amount})">Marcar como pago</button>
+    `).join('');
+  }
+  openSheet('sheet-reimbursements');
+}
+function settleDebt(fromId, toId, amount){
+  const g = getGroup(currentGroupId);
+  g.expenses.push({
+    id: uid(),
+    title: 'Reembolso',
+    amount: Math.round(amount*100)/100,
+    category: 'settlement',
+    paidBy: fromId,
+    participants: [toId],
+    customSplit: null,
+    date: todayISO(),
+    createdAt: Date.now(),
+    photo: null
+  });
+  saveState();
+  renderGroupDetail();
+  openReimbursements();
+  showToast('Reembolso registrado!');
+}
+
+/* ==================== FOTOS ==================== */
+function renderPhotosTab(g){
+  const withPhotos = g.expenses.filter(e=>e.photo);
+  const wrap = document.getElementById('photos-list');
+  if(withPhotos.length===0){
+    wrap.innerHTML = `<div class="empty-state"><span class="emoji">📷</span>Nenhuma foto ainda.<br>Anexe fotos de recibos ao adicionar uma despesa.</div>`;
+    return;
+  }
+  wrap.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">` +
+    withPhotos.map(e=>`<img src="${e.photo}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;" onclick="openEditExpense('${e.id}')">`).join('') +
+    `</div>`;
+}
+
+/* ==================== NOVA / EDITAR DESPESA ==================== */
+function openNewExpense(){
+  editingExpenseId = null;
+  pendingPhotoDataUrl = null;
+  document.getElementById('expense-sheet-title').textContent = 'Nova despesa';
+  document.getElementById('delete-expense-btn').style.display = 'none';
+  document.getElementById('expense-amount').value = '';
+  document.getElementById('expense-title').value = '';
+  document.getElementById('expense-date').value = todayISO();
+  document.getElementById('expense-photo-preview').innerHTML = '';
+  document.getElementById('expense-photo-input').value = '';
+  currentExpenseCategory = 'geral';
+  const g = getGroup(currentGroupId);
+  currentExpensePayer = g.participants[0] ? g.participants[0].id : null;
+  currentExpenseParticipants = g.participants.map(p=>p.id);
+  currentSplitType = 'equal';
+  document.querySelectorAll('#sheet-new-expense .seg').forEach(s=>s.classList.toggle('active', s.dataset.split==='equal'));
+  document.getElementById('expense-custom-split').style.display='none';
+  renderExpenseCategoryChips();
+  renderExpensePayerChips(g);
+  renderExpenseParticipantsChips(g);
+  updateSplitHint(g);
+  openSheet('sheet-new-expense');
+}
+function openEditExpense(expenseId){
+  const g = getGroup(currentGroupId);
+  const e = g.expenses.find(x=>x.id===expenseId);
+  if(!e) return;
+  editingExpenseId = expenseId;
+  pendingPhotoDataUrl = e.photo || null;
+  document.getElementById('expense-sheet-title').textContent = e.category==='settlement' ? 'Reembolso' : 'Editar despesa';
+  document.getElementById('delete-expense-btn').style.display = '';
+  document.getElementById('expense-amount').value = e.amount;
+  document.getElementById('expense-title').value = e.title;
+  document.getElementById('expense-date').value = e.date;
+  document.getElementById('expense-photo-preview').innerHTML = e.photo ? `<img src="${e.photo}" style="max-width:120px;border-radius:8px;">` : '';
+  document.getElementById('expense-photo-input').value = '';
+  currentExpenseCategory = e.category === 'settlement' ? 'geral' : e.category;
+  currentExpensePayer = e.paidBy;
+  currentExpenseParticipants = e.participants.slice();
+  currentSplitType = e.customSplit ? 'custom' : 'equal';
+  document.querySelectorAll('#sheet-new-expense .seg').forEach(s=>s.classList.toggle('active', s.dataset.split===currentSplitType));
+  renderExpenseCategoryChips();
+  renderExpensePayerChips(g);
+  renderExpenseParticipantsChips(g);
+  if(currentSplitType==='custom'){ renderCustomSplitInputs(g, e.customSplit); document.getElementById('expense-custom-split').style.display=''; }
+  else document.getElementById('expense-custom-split').style.display='none';
+  updateSplitHint(g);
+  openSheet('sheet-new-expense');
+}
+function renderExpenseCategoryChips(){
+  const el = document.getElementById('expense-category-chips');
+  el.innerHTML = CATEGORIES.map(c=>`<div class="chip ${c.id===currentExpenseCategory?'selected':''}" data-c="${c.id}">${c.icon} ${c.label}</div>`).join('');
+  el.querySelectorAll('.chip').forEach(node=>{
+    node.onclick = ()=>{ currentExpenseCategory = node.dataset.c; renderExpenseCategoryChips(); };
+  });
+}
+function renderExpensePayerChips(g){
+  const el = document.getElementById('expense-payer-chips');
+  el.innerHTML = g.participants.map(p=>`<div class="chip ${p.id===currentExpensePayer?'selected':''}" data-p="${p.id}">${escapeHtml(p.name)}</div>`).join('');
+  el.querySelectorAll('.chip').forEach(node=>{
+    node.onclick = ()=>{ currentExpensePayer = node.dataset.p; renderExpensePayerChips(g); };
+  });
+}
+function renderExpenseParticipantsChips(g){
+  const el = document.getElementById('expense-participants-chips');
+  el.innerHTML = g.participants.map(p=>`<div class="chip ${currentExpenseParticipants.includes(p.id)?'selected':''}" data-p="${p.id}">${escapeHtml(p.name)}</div>`).join('');
+  el.querySelectorAll('.chip').forEach(node=>{
+    node.onclick = ()=>{
+      const pid = node.dataset.p;
+      const idx = currentExpenseParticipants.indexOf(pid);
+      if(idx>=0) currentExpenseParticipants.splice(idx,1); else currentExpenseParticipants.push(pid);
+      renderExpenseParticipantsChips(g);
+      if(currentSplitType==='custom') renderCustomSplitInputs(g, null);
+      updateSplitHint(g);
+    };
+  });
+}
+function setSplitType(type){
+  currentSplitType = type;
+  document.querySelectorAll('#sheet-new-expense .seg').forEach(s=>s.classList.toggle('active', s.dataset.split===type));
+  const g = getGroup(currentGroupId);
+  if(type==='custom'){
+    renderCustomSplitInputs(g, null);
+    document.getElementById('expense-custom-split').style.display='';
+  } else {
+    document.getElementById('expense-custom-split').style.display='none';
+  }
+  updateSplitHint(g);
+}
+function renderCustomSplitInputs(g, existing){
+  const el = document.getElementById('expense-custom-split');
+  const total = parseFloat(document.getElementById('expense-amount').value) || 0;
+  const included = g.participants.filter(p=>currentExpenseParticipants.includes(p.id));
+  const evenShare = included.length ? (total/included.length) : 0;
+  el.innerHTML = included.map(p=>{
+    const val = existing && existing[p.id]!==undefined ? existing[p.id] : evenShare;
+    return `<div class="split-row">
+      <div class="avatar" style="background:${colorForId(p.id)}">${initials(p.name)}</div>
+      <div class="nm">${escapeHtml(p.name)}</div>
+      <input type="number" step="0.01" data-p="${p.id}" value="${val.toFixed(2)}" oninput="updateSplitHint(getGroup(currentGroupId))">
+    </div>`;
+  }).join('');
+}
+function updateSplitHint(g){
+  const hint = document.getElementById('split-hint');
+  if(currentSplitType!=='custom'){ hint.textContent=''; return; }
+  const total = parseFloat(document.getElementById('expense-amount').value) || 0;
+  let sum = 0;
+  document.querySelectorAll('#expense-custom-split input').forEach(inp=>sum += parseFloat(inp.value)||0);
+  const diff = Math.round((total-sum)*100)/100;
+  if(Math.abs(diff) < 0.01){ hint.textContent = 'Os valores somam o total da despesa. ✓'; hint.style.color='var(--green)'; }
+  else { hint.textContent = `Falta ${fmtMoney(diff)} para bater com o total.`; hint.style.color='var(--red)'; }
+}
+function onExpensePhoto(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    pendingPhotoDataUrl = reader.result;
+    document.getElementById('expense-photo-preview').innerHTML = `<img src="${reader.result}" style="max-width:120px;border-radius:8px;">`;
+  };
+  reader.readAsDataURL(file);
+}
+function saveNewExpense(){
+  const g = getGroup(currentGroupId);
+  const amount = parseFloat(document.getElementById('expense-amount').value);
+  const title = document.getElementById('expense-title').value.trim();
+  const date = document.getElementById('expense-date').value || todayISO();
+  if(!amount || amount<=0){ showToast('Digite um valor válido'); return; }
+  if(!title){ showToast('Digite uma descrição'); return; }
+  if(!currentExpensePayer){ showToast('Selecione quem pagou'); return; }
+  if(currentExpenseParticipants.length===0){ showToast('Selecione ao menos um participante'); return; }
+
+  let customSplit = null;
+  if(currentSplitType==='custom'){
+    customSplit = {};
+    let sum=0;
+    document.querySelectorAll('#expense-custom-split input').forEach(inp=>{
+      const v = parseFloat(inp.value)||0;
+      customSplit[inp.dataset.p] = v;
+      sum += v;
+    });
+    if(Math.abs(sum-amount) > 0.02){ showToast('A soma dos valores personalizados precisa bater com o total'); return; }
+  }
+
+  if(editingExpenseId){
+    const e = g.expenses.find(x=>x.id===editingExpenseId);
+    e.amount = amount; e.title = title; e.date = date;
+    e.category = currentExpenseCategory; e.paidBy = currentExpensePayer;
+    e.participants = currentExpenseParticipants.slice(); e.customSplit = customSplit;
+    e.photo = pendingPhotoDataUrl;
+  } else {
+    g.expenses.push({
+      id: uid(), title, amount, category: currentExpenseCategory,
+      paidBy: currentExpensePayer, participants: currentExpenseParticipants.slice(),
+      customSplit, date, createdAt: Date.now(), photo: pendingPhotoDataUrl
+    });
+  }
+  saveState();
+  closeSheet('sheet-new-expense');
+  renderGroupDetail();
+  showToast('Despesa salva!');
+}
+function deleteCurrentExpense(){
+  if(!editingExpenseId) return;
+  if(!confirm('Excluir esta despesa?')) return;
+  const g = getGroup(currentGroupId);
+  g.expenses = g.expenses.filter(e=>e.id!==editingExpenseId);
+  saveState();
+  closeSheet('sheet-new-expense');
+  renderGroupDetail();
+  showToast('Despesa excluída');
+}
+
+/* ==================== DADOS: EXPORT / RESET ==================== */
+function exportData(){
+  document.getElementById('home-menu').classList.remove('active');
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'divideja-backup.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function wipeAllData(){
+  document.getElementById('home-menu').classList.remove('active');
+  if(!confirm('Isso vai apagar TODOS os grupos e despesas. Tem certeza?')) return;
+  state = {groups:[]};
+  saveState();
+  goHome();
+  showToast('Dados apagados');
+}
+
+/* ==================== EXEMPLO INICIAL ==================== */
+function seedExampleIfEmpty(){
+  if(state.groups.length>0) return;
+  const alex = {id:uid(), name:'Alex'};
+  const brian = {id:uid(), name:'Brian'};
+  const julia = {id:uid(), name:'Julia'};
+  const thomas = {id:uid(), name:'Thomas'};
+  const g = {
+    id: uid(), name:'Viagem para a cidade', emoji:'🏙️',
+    participants: [alex, brian, julia, thomas],
+    expenses: [
+      {id:uid(), title:'Hotel', amount:85, category:'hospedagem', paidBy:alex.id, participants:[alex.id,brian.id,julia.id,thomas.id], customSplit:null, date: '2026-06-20', createdAt: Date.now()-3000, photo:null},
+      {id:uid(), title:'Piquenique', amount:13, category:'comida', paidBy:brian.id, participants:[alex.id,brian.id,julia.id,thomas.id], customSplit:null, date:'2026-06-20', createdAt: Date.now()-2000, photo:null},
+      {id:uid(), title:'Carro', amount:64, category:'transporte', paidBy:julia.id, participants:[alex.id,brian.id,julia.id,thomas.id], customSplit:null, date:'2026-06-20', createdAt: Date.now()-1000, photo:null},
+    ]
+  };
+  state.groups.push(g);
+  saveState();
+}
+
+/* ==================== INICIALIZAÇÃO ==================== */
+loadState();
+seedExampleIfEmpty();
+renderGroupsList();
+document.getElementById('expense-amount').addEventListener('input', ()=>{
+  if(currentSplitType==='custom') updateSplitHint(getGroup(currentGroupId));
+});
+</script>
+</body>
+</html>
