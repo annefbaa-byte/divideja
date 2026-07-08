@@ -32,23 +32,24 @@ html,body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   overscroll-behavior-y: none;
 }
-body{
+body{ background:#000000; }
+html.theme-light body{ background:#f2f2f7; }
+body::before{
+  content:''; position:fixed; inset:0; z-index:-1;
   background:
     radial-gradient(ellipse 90% 55% at 15% 0%, rgba(10,132,255,0.35), transparent 60%),
     radial-gradient(ellipse 80% 50% at 100% 20%, rgba(255,69,58,0.28), transparent 60%),
     radial-gradient(ellipse 90% 60% at 20% 100%, rgba(191,90,242,0.22), transparent 60%),
     radial-gradient(ellipse 70% 50% at 90% 90%, rgba(255,159,10,0.18), transparent 60%),
     #000000;
-  background-attachment:fixed;
 }
-html.theme-light body{
+html.theme-light body::before{
   background:
     radial-gradient(ellipse 90% 55% at 15% 0%, rgba(10,132,255,0.14), transparent 60%),
     radial-gradient(ellipse 80% 50% at 100% 20%, rgba(255,69,58,0.10), transparent 60%),
     radial-gradient(ellipse 90% 60% at 20% 100%, rgba(191,90,242,0.10), transparent 60%),
     radial-gradient(ellipse 70% 50% at 90% 90%, rgba(255,159,10,0.10), transparent 60%),
     #f2f2f7;
-  background-attachment:fixed;
 }
 #app{
   max-width:520px; margin:0 auto; min-height:100vh;
@@ -282,6 +283,7 @@ input:focus, select:focus{ border-color:var(--blue); }
 .sheet-overlay{
   position:fixed; inset:0; z-index:50; display:none; flex-direction:column;
   max-width:520px; margin:0 auto;
+  padding-top:var(--safe-top); padding-bottom:var(--safe-bottom);
   background:
     radial-gradient(ellipse 90% 55% at 15% 0%, rgba(10,132,255,0.35), transparent 60%),
     radial-gradient(ellipse 80% 50% at 100% 20%, rgba(255,69,58,0.28), transparent 60%),
@@ -337,12 +339,12 @@ html.theme-light{
   display:flex; flex-direction:column; align-items:center;
 }
 .bottom-nav{
-  display:flex; margin:8px 12px 0; align-self:stretch;
+  display:flex; margin:8px 12px calc(var(--safe-bottom) + 10px); align-self:stretch;
   background:var(--card2); border-radius:26px;
   border:1px solid var(--border);
   -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
   box-shadow:inset 0 1px 0 var(--glass-highlight), 0 8px 24px rgba(0,0,0,.3);
-  padding:10px 4px calc(var(--safe-bottom) + 10px);
+  padding:10px 4px;
 }
 .nav-item{ flex:1; text-align:center; color:var(--text-dim); cursor:pointer; }
 .nav-item.active{ color:var(--blue); }
@@ -437,10 +439,10 @@ html.theme-light .exp-tag.paid{ color:#0a6b1e; }
   <section class="screen active" id="screen-home">
     <div class="topbar">
       <div class="side"></div>
-      <div class="side right"><button class="icon-btn" onclick="openHomeMenu()">⚙️</button></div>
+      <div class="side right"><button class="icon-btn" onclick="openHomeMenu()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="M19.4 13.6c.05-.53.05-1.07 0-1.6l1.6-1.15a.6.6 0 0 0 .17-.76l-1.5-2.6a.6.6 0 0 0-.72-.27l-1.87.65a7.7 7.7 0 0 0-1.38-.8l-.3-1.96a.6.6 0 0 0-.6-.51H9.9a.6.6 0 0 0-.6.51l-.3 1.96c-.5.2-.96.47-1.38.8l-1.87-.65a.6.6 0 0 0-.72.27l-1.5 2.6a.6.6 0 0 0 .17.76l1.6 1.15c-.05.53-.05 1.07 0 1.6l-1.6 1.15a.6.6 0 0 0-.17.76l1.5 2.6a.6.6 0 0 0 .72.27l1.87-.65c.42.33.88.6 1.38.8l.3 1.96a.6.6 0 0 0 .6.51h4.2a.6.6 0 0 0 .6-.51l.3-1.96c.5-.2.96-.47 1.38-.8l1.87.65a.6.6 0 0 0 .72-.27l1.5-2.6a.6.6 0 0 0-.17-.76l-1.6-1.15Z"/></svg></button></div>
     </div>
     <div class="brand-header">
-      <div style="font-size:36px;">💸</div>
+      <div><svg viewBox="0 0 100 70" width="52" height="36"><circle cx="62" cy="35" r="27" fill="#8e8e93"/><circle cx="38" cy="35" r="27" fill="#f5f5f7" fill-opacity="0.92"/></svg></div>
       <h1>Splitae</h1>
       <div class="sub">DIVIDA CONTAS EM GRUPO</div>
     </div>
@@ -449,7 +451,7 @@ html.theme-light .exp-tag.paid{ color:#0a6b1e; }
       <button class="fab" onclick="openNewGroup()">＋</button>
       <div class="fab-label">Novo grupo</div>
       <div class="bottom-nav">
-        <div class="nav-item active" onclick="goHome()"><div class="nav-icon">🧾</div><div class="nav-label">Grupos</div></div>
+        <div class="nav-item active" onclick="goHome()"><div class="nav-icon"><svg viewBox="0 0 100 70" width="24" height="17" style="display:block;margin:0 auto;"><circle cx="62" cy="35" r="27" fill="#8e8e93"/><circle cx="38" cy="35" r="27" fill="#f5f5f7" fill-opacity="0.92"/></svg></div><div class="nav-label">Grupos</div></div>
         <div class="nav-item" onclick="openProfile()"><div class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto;"><circle cx="12" cy="12" r="9.2"/><circle cx="12" cy="9.7" r="3.1" fill="currentColor" stroke="none"/><path d="M5.3 18.3 C6.6 15 9.1 13.5 12 13.5 C14.9 13.5 17.4 15 18.7 18.3" fill="none"/></svg></div><div class="nav-label">Perfil</div></div>
       </div>
     </div>
@@ -481,7 +483,7 @@ html.theme-light .exp-tag.paid{ color:#0a6b1e; }
     </div>
     <div class="bottom-area">
       <div class="bottom-nav">
-        <div class="nav-item" onclick="goHome()"><div class="nav-icon">🧾</div><div class="nav-label">Grupos</div></div>
+        <div class="nav-item" onclick="goHome()"><div class="nav-icon"><svg viewBox="0 0 100 70" width="24" height="17" style="display:block;margin:0 auto;"><circle cx="62" cy="35" r="27" fill="#8e8e93"/><circle cx="38" cy="35" r="27" fill="#f5f5f7" fill-opacity="0.92"/></svg></div><div class="nav-label">Grupos</div></div>
         <div class="nav-item active" onclick="openProfile()"><div class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto;"><circle cx="12" cy="12" r="9.2"/><circle cx="12" cy="9.7" r="3.1" fill="currentColor" stroke="none"/><path d="M5.3 18.3 C6.6 15 9.1 13.5 12 13.5 C14.9 13.5 17.4 15 18.7 18.3" fill="none"/></svg></div><div class="nav-label">Perfil</div></div>
       </div>
     </div>
@@ -891,7 +893,7 @@ function closeSheet(id){ document.getElementById(id).classList.remove('active');
 function renderGroupsList(){
   const wrap = document.getElementById('groups-list');
   if(state.groups.length === 0){
-    wrap.innerHTML = `<div class="empty-state"><span class="emoji">💸</span>Você ainda não tem nenhum grupo.<br>Toque em "Novo grupo" para começar a dividir despesas.</div>`;
+    wrap.innerHTML = `<div class="empty-state"><span class="emoji"><svg viewBox="0 0 100 70" width="60" height="42" style="display:block;margin:0 auto 10px;"><circle cx="62" cy="35" r="27" fill="#8e8e93"/><circle cx="38" cy="35" r="27" fill="#f5f5f7" fill-opacity="0.92"/></svg></span>Você ainda não tem nenhum grupo.<br>Toque em "Novo grupo" para começar a dividir despesas.</div>`;
     return;
   }
   wrap.innerHTML = state.groups.map(g=>{
