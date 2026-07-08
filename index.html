@@ -506,7 +506,6 @@ html.theme-light .exp-tag.paid{ color:#0a6b1e; }
     <div class="tabs">
       <div class="tab active" data-tab="expenses" onclick="switchTab('expenses')">Despesas</div>
       <div class="tab" data-tab="balances" onclick="switchTab('balances')">Saldos</div>
-      <div class="tab" data-tab="photos" onclick="switchTab('photos')">Fotos</div>
     </div>
 
     <div class="content" id="tab-expenses">
@@ -524,10 +523,6 @@ html.theme-light .exp-tag.paid{ color:#0a6b1e; }
       <div id="balances-list"></div>
     </div>
 
-    <div class="content" id="tab-photos" style="display:none;">
-      <div id="photos-list"></div>
-    </div>
-
     <div class="fab-wrap" id="group-fab">
       <button class="fab" onclick="openNewExpense()">＋</button>
       <div class="fab-label">Adicionar despesa</div>
@@ -537,6 +532,7 @@ html.theme-light .exp-tag.paid{ color:#0a6b1e; }
   <div class="menu-popover" id="group-menu">
     <div class="menu-item" onclick="editParticipants()">Editar participantes</div>
     <div class="menu-item" onclick="editGroupInfo()">Editar grupo</div>
+    <div class="menu-item" onclick="shareGroup()">Compartilhar grupo</div>
     <div class="menu-item danger" onclick="deleteGroup()">Excluir grupo</div>
   </div>
   <div class="menu-popover" id="home-menu">
@@ -797,11 +793,12 @@ function showToast(msg){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 1800);
 }
-function showConfirm(title, message, onConfirm, confirmLabel){
+function showConfirm(title, message, onConfirm, confirmLabel, style){
   document.getElementById('confirm-title').textContent = title;
   document.getElementById('confirm-message').textContent = message;
   const okBtn = document.getElementById('confirm-ok-btn');
   okBtn.textContent = confirmLabel || 'Excluir';
+  okBtn.classList.toggle('danger', style !== 'neutral');
   okBtn.onclick = ()=>{ closeConfirm(); onConfirm(); };
   document.getElementById('confirm-overlay').classList.add('active');
 }
@@ -1016,6 +1013,78 @@ function deleteGroup(){
   });
 }
 
+/* ==================== COMPARTILHAR GRUPO (link de entrada) ==================== */
+function encodeJoinPayload(obj){
+  return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(obj)))));
+}
+function decodeJoinPayload(str){
+  return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(str)))));
+}
+function buildJoinLink(g){
+  const payload = {
+    name: g.name,
+    emoji: g.emoji,
+    currency: g.currency || 'BRL',
+    participants: (g.participants||[]).map(p=>p.name)
+  };
+  const encoded = encodeJoinPayload(payload);
+  const base = location.origin + location.pathname;
+  return base + '#join=' + encoded;
+}
+function shareGroup(){
+  document.getElementById('group-menu').classList.remove('active');
+  const g = getGroup(currentGroupId);
+  if(!g) return;
+  const link = buildJoinLink(g);
+  const text = `Entra no grupo "${g.name}" no Splitae pra gente dividir as contas:`;
+  if(navigator.share){
+    navigator.share({ title: 'Splitae', text, url: link }).catch(()=>{});
+  } else if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(`${text} ${link}`).then(()=>{
+      showToast('Link copiado!');
+    }).catch(()=>{
+      showToast('Não foi possível copiar o link');
+    });
+  } else {
+    showToast('Não foi possível compartilhar');
+  }
+}
+function checkJoinLink(){
+  const hash = location.hash || '';
+  const match = hash.match(/#join=([^&]+)/);
+  if(!match) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  let payload;
+  try{
+    payload = decodeJoinPayload(match[1]);
+  } catch(err){
+    showToast('Link de convite inválido');
+    return;
+  }
+  if(!payload || !payload.name) return;
+  const names = (payload.participants||[]).join(', ');
+  showConfirm(
+    'Entrar no grupo',
+    `Deseja adicionar o grupo "${payload.name}"${names ? ' (participantes: '+names+')' : ''} ao seu Splitae?`,
+    ()=>{
+      const group = {
+        id: uid(),
+        name: payload.name,
+        emoji: payload.emoji || '👥',
+        currency: payload.currency || 'BRL',
+        participants: (payload.participants||[]).map(name=>({id: uid(), name})),
+        expenses: []
+      };
+      state.groups.push(group);
+      saveState();
+      goHome();
+      showToast('Grupo adicionado!');
+    },
+    'Entrar',
+    'neutral'
+  );
+}
+
 /* ==================== PARTICIPANTES ==================== */
 function editParticipants(){
   document.getElementById('group-menu').classList.remove('active');
@@ -1067,10 +1136,9 @@ function renderGroupDetail(){
   activeCurrency = g.currency || 'BRL';
   document.getElementById('group-detail-icon').textContent = g.emoji;
   document.getElementById('group-detail-name').textContent = g.name;
-  document.querySelectorAll('#screen-group .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab === (currentTab==='balances'?'balances':currentTab==='photos'?'photos':'expenses')));
+  document.querySelectorAll('#screen-group .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab === (currentTab==='balances'?'balances':'expenses')));
   renderExpensesTab(g);
   renderBalancesTab(g);
-  renderPhotosTab(g);
   showTabContent();
 }
 function switchTab(tab){
@@ -1081,7 +1149,6 @@ function switchTab(tab){
 function showTabContent(){
   document.getElementById('tab-expenses').style.display = currentTab==='expenses' ? '' : 'none';
   document.getElementById('tab-balances').style.display = currentTab==='balances' ? '' : 'none';
-  document.getElementById('tab-photos').style.display = currentTab==='photos' ? '' : 'none';
   document.getElementById('group-fab').style.display = currentTab==='expenses' ? 'flex' : 'none';
 }
 
@@ -1101,7 +1168,7 @@ function renderExpensesTab(g){
 
   const list = document.getElementById('expenses-list');
   if(g.expenses.length===0){
-    list.innerHTML = `<div class="empty-state"><span class="emoji">🧾</span>Nenhuma despesa registrada ainda.<br>Toque em "Adicionar despesa" para começar.</div>`;
+    list.innerHTML = `<div class="empty-state">Nenhuma despesa registrada ainda.<br>Toque em "Adicionar despesa" para começar.</div>`;
     return;
   }
   const sorted = g.expenses.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.createdAt-a.createdAt);
@@ -1244,19 +1311,6 @@ function settleDebt(fromId, toId, amount){
   renderGroupDetail();
   openReimbursements();
   showToast('Reembolso registrado!');
-}
-
-/* ==================== FOTOS ==================== */
-function renderPhotosTab(g){
-  const withPhotos = g.expenses.filter(e=>e.photo);
-  const wrap = document.getElementById('photos-list');
-  if(withPhotos.length===0){
-    wrap.innerHTML = `<div class="empty-state"><span class="emoji">📷</span>Nenhuma foto ainda.<br>Anexe fotos de recibos ao adicionar uma despesa.</div>`;
-    return;
-  }
-  wrap.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">` +
-    withPhotos.map(e=>`<img src="${e.photo}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;" onclick="openExpenseDetail('${e.id}')">`).join('') +
-    `</div>`;
 }
 
 /* ==================== DETALHE DA DESPESA (visualização) ==================== */
@@ -1547,6 +1601,7 @@ function wipeAllData(){
 loadState();
 applyTheme();
 renderGroupsList();
+window.addEventListener('hashchange', checkJoinLink);
 document.getElementById('expense-amount').addEventListener('input', ()=>{
   if(currentSplitType==='custom') updateSplitHint(getGroup(currentGroupId));
 });
@@ -1556,6 +1611,7 @@ setTimeout(()=>{
     splash.classList.add('hide');
     setTimeout(()=>splash.remove(), 700);
   }
+  checkJoinLink();
 }, 2000);
 </script>
 </body>
