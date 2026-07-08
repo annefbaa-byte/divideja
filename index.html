@@ -48,6 +48,18 @@ html,body{
 html{ background:#000000; }
 html.theme-light{ background:#ffffff; }
 body{ background:transparent; }
+#splash-screen{
+  position:fixed; inset:0; z-index:9999;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:linear-gradient(180deg, #3b6ff0 0%, #1d3fa8 55%, #0b1a5e 100%);
+  transition:opacity .6s ease;
+}
+#splash-screen.hide{ opacity:0; pointer-events:none; }
+.splash-logo{ margin-bottom:28px; }
+.splash-title{ font-size:36px; font-weight:800; margin:0; letter-spacing:-0.5px; }
+.splash-title .bold{ color:#ffffff; }
+.splash-title .light{ color:rgba(255,255,255,0.55); font-weight:600; }
+.splash-sub{ margin-top:10px; color:rgba(255,255,255,0.65); font-size:15px; }
 #app{
   max-width:520px; margin:0 auto; min-height:100vh;
   display:flex; flex-direction:column;
@@ -418,6 +430,11 @@ html.theme-light .exp-tag.paid{ color:#0a6b1e; }
 </style>
 </head>
 <body>
+<div id="splash-screen">
+  <div class="splash-logo"><svg viewBox="0 0 100 70" width="90" height="63"><circle cx="62" cy="35" r="27" fill="#7fa5f2" fill-opacity="0.6"/><circle cx="38" cy="35" r="27" fill="#f8faff"/></svg></div>
+  <h1 class="splash-title"><span class="bold">Split</span><span class="light">ae</span></h1>
+  <div class="splash-sub">Divisão fácil, sem estresse</div>
+</div>
 <div id="app">
 
   <!-- ===================== LISTA DE GRUPOS ===================== -->
@@ -1531,6 +1548,13 @@ renderGroupsList();
 document.getElementById('expense-amount').addEventListener('input', ()=>{
   if(currentSplitType==='custom') updateSplitHint(getGroup(currentGroupId));
 });
+setTimeout(()=>{
+  const splash = document.getElementById('splash-screen');
+  if(splash){
+    splash.classList.add('hide');
+    setTimeout(()=>splash.remove(), 700);
+  }
+}, 2000);
 </script>
 </body>
 </html>
